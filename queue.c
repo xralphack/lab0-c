@@ -209,20 +209,61 @@ void q_reverse(queue_t *q)
     }
 }
 
-void q_bubble_sort(queue_t *q)
+list_ele_t *merge(list_ele_t *head1, list_ele_t *head2)
 {
-    for (int i = q->size; i > 0; i--) {
-        list_ele_t *thist = q->head;
+    list_ele_t *head = strcmp(head1->value, head2->value) <= 0 ? head1 : head2;
+    list_ele_t *cursor = NULL;
 
-        for (int j = 0; j < i - 1; j++) {
-            if (strcmp(thist->value, thist->next->value) > 0) {
-                char *tmp = thist->value;
-                thist->value = thist->next->value;
-                thist->next->value = tmp;
+    while (head1 && head2) {
+        if (strcmp(head1->value, head2->value) <= 0) {  // 1 <= 2
+            if (!cursor) {
+                cursor = head1;
+            } else {
+                cursor->next = head1;
+                cursor = cursor->next;
             }
-            thist = thist->next;
+            head1 = head1->next;
+        } else {
+            if (!cursor) {
+                cursor = head2;
+            } else {
+                cursor->next = head2;
+                cursor = cursor->next;
+            }
+            head2 = head2->next;
         }
     }
+
+    if (head1) {
+        cursor->next = head1;
+    } else if (head2) {
+        cursor->next = head2;
+    }
+
+    return head;
+}
+
+list_ele_t *merge_sort(list_ele_t *node)
+{
+    if (!node || !node->next) {
+        return node;
+    }
+
+    list_ele_t *slow = node;
+    list_ele_t *fast = node->next;
+
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    fast = slow->next;
+    slow->next = NULL;
+
+    list_ele_t *node1 = merge_sort(node);
+    list_ele_t *node2 = merge_sort(fast);
+
+    return merge(node1, node2);
 }
 
 /*
@@ -236,5 +277,9 @@ void q_sort(queue_t *q)
         return;
     }
 
-    q_bubble_sort(q);
+    q->head = merge_sort(q->head);
+
+    while (q->tail->next) {
+        q->tail = q->tail->next;
+    }
 }
